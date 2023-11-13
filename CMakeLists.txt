@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.14)
 include(cmake/prelude.cmake)
 include(cmake/FetchMiniz.cmake)
 
-SET(CMAKE_C_COMPILER   "/c/Program\ Files/LLVM/bin/clang" CACHE STRING "C++ compiler" FORCE)
-SET(CMAKE_CXX_COMPILER "/c/Program\ Files/LLVM/bin/clang++" CACHE STRING "C++ compiler" FORCE)
-
 project(
     libraryproject
     VERSION 0.1.0
@@ -13,10 +10,6 @@ project(
     HOMEPAGE_URL "https://example.com/"
     LANGUAGES NONE
 )
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)

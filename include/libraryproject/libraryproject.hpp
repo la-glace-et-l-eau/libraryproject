@@ -12,7 +12,7 @@ inline auto name() -> std::string
 }
 
 void printk() {
-  printf("##### k !\n");
+  printf("######## k !\n");
 }
 
 #if defined(__GNUC__)
