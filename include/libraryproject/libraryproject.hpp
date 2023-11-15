@@ -100,21 +100,21 @@ int main_function(int argc, char *argv[])
   }
 
   // Get and print information about each file in the archive.
-  for (i = 0; i < (int)mz_zip_reader_get_num_files(&zip_archive); i++)
+  for (uint j = 0; j < (uint)mz_zip_reader_get_num_files(&zip_archive); j++)
   {
     mz_zip_archive_file_stat file_stat;
-    if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
+    if (!mz_zip_reader_file_stat(&zip_archive, j, &file_stat))
     {
       printf("mz_zip_reader_file_stat() failed!\n");
       mz_zip_reader_end(&zip_archive);
       return EXIT_FAILURE;
     }
 
-    printf("Filename: \"%s\", Comment: \"%s\", Uncompressed size: %u, Compressed size: %u, Is Dir: %u\n", file_stat.m_filename, file_stat.m_comment, (uint)file_stat.m_uncomp_size, (uint)file_stat.m_comp_size, mz_zip_reader_is_file_a_directory(&zip_archive, i));
+    printf("Filename: \"%s\", Comment: \"%s\", Uncompressed size: %u, Compressed size: %u, Is Dir: %u\n", file_stat.m_filename, file_stat.m_comment, (uint)file_stat.m_uncomp_size, (uint)file_stat.m_comp_size, mz_zip_reader_is_file_a_directory(&zip_archive, j));
 
     if (!strcmp(file_stat.m_filename, "directory/"))
     {
-      if (!mz_zip_reader_is_file_a_directory(&zip_archive, i))
+      if (!mz_zip_reader_is_file_a_directory(&zip_archive, j))
       {
         printf("mz_zip_reader_is_file_a_directory() didn't return the expected results!\n");
         mz_zip_reader_end(&zip_archive);

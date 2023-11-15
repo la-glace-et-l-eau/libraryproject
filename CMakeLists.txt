@@ -8,7 +8,7 @@ project(
     VERSION 0.1.0
     DESCRIPTION "good 2"
     HOMEPAGE_URL "https://example.com/"
-    LANGUAGES NONE
+    LANGUAGES CXX
 )
 
 include(cmake/project-is-top-level.cmake)
