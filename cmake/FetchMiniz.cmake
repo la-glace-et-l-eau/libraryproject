@@ -2,10 +2,6 @@
 
 include(FetchContent)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 FetchContent_Declare(
   miniz
   GIT_REPOSITORY https://github.com/richgel999/miniz
@@ -13,6 +9,9 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(miniz)
+
+set_target_properties(miniz PROPERTIES CXX_STANDARD 20)
+target_compile_options(miniz PUBLIC -Werror -Wno-deprecated-declarations)
 
 message("Fetched miniz source code from Github: ${miniz_SOURCE_DIR}")
 include_directories(
@@ -48,6 +47,9 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(fmt)
+
+set_target_properties(fmt PROPERTIES CXX_STANDARD 20)
+target_compile_options(fmt PUBLIC -Werror -Wno-deprecated-declarations)
 
 
 message("Fetched fmt source code from Github: ${fmt_SOURCE_DIR}")
