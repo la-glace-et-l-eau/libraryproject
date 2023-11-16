@@ -8,7 +8,7 @@ project(
     VERSION 0.1.0
     DESCRIPTION "good 2"
     HOMEPAGE_URL "https://example.com/"
-    LANGUAGES CXX
+    LANGUAGES C CXX
 )
 
 include(cmake/project-is-top-level.cmake)
@@ -34,6 +34,10 @@ target_compile_features(libraryproject_libraryproject INTERFACE cxx_std_20)
 
 target_link_libraries(libraryproject_libraryproject INTERFACE fmt::fmt)
 target_link_libraries(libraryproject_libraryproject INTERFACE miniz)
+target_link_libraries(libraryproject_libraryproject INTERFACE boost)
+
+
+
 
 # ---- Install rules ----
 

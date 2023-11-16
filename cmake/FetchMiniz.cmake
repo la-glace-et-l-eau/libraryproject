@@ -17,9 +17,6 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(miniz)
 
-set_target_properties(miniz PROPERTIES CXX_STANDARD 20)
-target_compile_options(miniz PUBLIC -Werror -Wno-deprecated-declarations)
-
 message("Fetched miniz source code from Github: ${miniz_SOURCE_DIR}")
 include_directories(
   ${miniz_SOURCE_DIR}
@@ -58,15 +55,79 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(fmt)
 
-set_target_properties(fmt PROPERTIES CXX_STANDARD 20)
-target_compile_options(fmt PUBLIC -Werror -Wno-deprecated-declarations)
-
-
 message("Fetched fmt source code from Github: ${fmt_SOURCE_DIR}")
 include_directories(
   ${fmt_SOURCE_DIR}
   ${fmt_BINARY_DIR}
 )
+
+set(BOOST_ENABLE_CMAKE ON)
+set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
+
+FetchContent_Declare(
+        boost
+        GIT_REPOSITORY              https://github.com/boostorg/boost.git
+        GIT_TAG                     origin/master
+        GIT_SHALLOW                 1
+        GIT_PROGRESS                1
+        GIT_SUBMODULES              "libs/thread libs/bind libs/config libs/core libs/date_time libs/throw_exception libs/assert libs/smart_ptr libs/winapi libs/predef libs/utility libs/static_assert libs/type_traits libs/numeric libs/mpl libs/preprocessor libs/system libs/chrono libs/ratio libs/integer libs/move libs/io libs/container_hash libs/describe libs/mp11"
+        GIT_REMOTE_UPDATE_STRATEGY  CHECKOUT    
+)
+
+FetchContent_GetProperties(boost)
+if (NOT boost_POPULATED)
+    FetchContent_Populate(boost)
+endif ()
+
+FetchContent_MakeAvailable(boost)
+
+set(
+  Boost_INCLUDE_DIRS
+  ${boost_SOURCE_DIR}
+  ${boost_BINARY_DIR}
+  ${boost_SOURCE_DIR}/libs/bind/include
+  ${boost_SOURCE_DIR}/libs/thread/include
+  ${boost_SOURCE_DIR}/libs/config/include
+  ${boost_SOURCE_DIR}/libs/core/include
+  ${boost_SOURCE_DIR}/libs/date_time/include
+  ${boost_SOURCE_DIR}/libs/throw_exception/include
+  ${boost_SOURCE_DIR}/libs/assert/include
+  ${boost_SOURCE_DIR}/libs/smart_ptr/include
+  ${boost_SOURCE_DIR}/libs/winapi/include
+  ${boost_SOURCE_DIR}/libs/predef/include
+  ${boost_SOURCE_DIR}/libs/utility/include
+  ${boost_SOURCE_DIR}/libs/static_assert/include
+  ${boost_SOURCE_DIR}/libs/type_traits/include
+  ${boost_SOURCE_DIR}/libs/numeric/conversion/include
+  ${boost_SOURCE_DIR}/libs/mpl/include
+  ${boost_SOURCE_DIR}/libs/preprocessor/include
+  ${boost_SOURCE_DIR}/libs/system/include
+  ${boost_SOURCE_DIR}/libs/chrono/include
+  ${boost_SOURCE_DIR}/libs/ratio/include
+  ${boost_SOURCE_DIR}/libs/integer/include
+  ${boost_SOURCE_DIR}/libs/move/include
+  ${boost_SOURCE_DIR}/libs/io/include
+  ${boost_SOURCE_DIR}/libs/container_hash/include
+  ${boost_SOURCE_DIR}/libs/describe/include
+  ${boost_SOURCE_DIR}/libs/mp11/include
+)
+
+
+message("Fetched boost source code from Github: ${boost_SOURCE_DIR}")
+include_directories(
+  ${Boost_INCLUDE_DIRS}
+)
+
+add_library(boost STATIC ${Boost_INCLUDE_DIRS})
+target_compile_options(boost INTERFACE -Wno-undef -Wno-language-extension-token -Wno-gnu-anonymous-struct -Wno-old-style-cast -Wno-microsoft-cpp-macro -Wno-sign-conversion -Wno-nested-anon-types -Wno-format-nonliteral -Wno-implicit-int-float-conversion)
+set_target_properties(boost PROPERTIES LINKER_LANGUAGE CXX)
+
+set_property(
+    TARGET boost PROPERTY
+    EXPORT_NAME boost
+)
+
+set(FETCHCONTENT_UPDATES_DISCONNECTED FALSE)
 
 # set(MINIZ_SOURCE_URL
 #         "https://github.com/richgel999/miniz")

@@ -21,6 +21,12 @@ install(
 )
 
 install(
+    TARGETS boost
+    EXPORT boostTargets
+    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+)
+
+install(
     TARGETS libraryproject_libraryproject
     EXPORT libraryprojectTargets
     INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
@@ -50,6 +56,13 @@ install(
     FILES "${PROJECT_BINARY_DIR}/${package}ConfigVersion.cmake"
     DESTINATION "${libraryproject_INSTALL_CMAKEDIR}"
     COMPONENT libraryproject_Development
+)
+
+install(
+    EXPORT boostTargets
+    NAMESPACE libraryproject::
+    DESTINATION "${libraryproject_INSTALL_CMAKEDIR}"
+    COMPONENT boost
 )
 
 install(

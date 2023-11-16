@@ -73,7 +73,7 @@ int main_function(int argc, char *argv[])
     // Add a new file to the archive. Note this is an IN-PLACE operation, so if it fails your archive is probably hosed (its central directory may not be complete) but it should be recoverable using zip -F or -FF. So use caution with this guy.
     // A more robust way to add a file to an archive would be to read it into memory, perform the operation, then write a new archive out to a temp file and then delete/rename the files.
     // Or, write a new archive to disk to a temp file, then delete/rename the files. For this test this API is fine.
-    status = mz_zip_add_mem_to_archive_file_in_place(s_Test_archive_filename, archive_filename, data, strlen(data) + 1, s_pComment, (uint16)strlen(s_pComment), MZ_BEST_COMPRESSION);
+    status = mz_zip_add_mem_to_archive_file_in_place(s_Test_archive_filename, archive_filename, data, strlen(data) + 1, s_pComment, static_cast<uint16>(strlen(s_pComment)), MZ_BEST_COMPRESSION);
     if (!status)
     {
       printf("mz_zip_add_mem_to_archive_file_in_place failed!\n");
@@ -82,7 +82,7 @@ int main_function(int argc, char *argv[])
   }
 
   // Add a directory entry for testing
-  status = mz_zip_add_mem_to_archive_file_in_place(s_Test_archive_filename, "directory/", NULL, 0, "no comment", (uint16)strlen("no comment"), MZ_BEST_COMPRESSION);
+  status = mz_zip_add_mem_to_archive_file_in_place(s_Test_archive_filename, "directory/", NULL, 0, "no comment", static_cast<uint16>(strlen("no comment")), MZ_BEST_COMPRESSION);
   if (!status)
   {
     printf("mz_zip_add_mem_to_archive_file_in_place failed!\n");
@@ -100,7 +100,7 @@ int main_function(int argc, char *argv[])
   }
 
   // Get and print information about each file in the archive.
-  for (uint j = 0; j < (uint)mz_zip_reader_get_num_files(&zip_archive); j++)
+  for (uint j = 0; j < static_cast<uint>(mz_zip_reader_get_num_files(&zip_archive)); j++)
   {
     mz_zip_archive_file_stat file_stat;
     if (!mz_zip_reader_file_stat(&zip_archive, j, &file_stat))
@@ -110,7 +110,7 @@ int main_function(int argc, char *argv[])
       return EXIT_FAILURE;
     }
 
-    printf("Filename: \"%s\", Comment: \"%s\", Uncompressed size: %u, Compressed size: %u, Is Dir: %u\n", file_stat.m_filename, file_stat.m_comment, (uint)file_stat.m_uncomp_size, (uint)file_stat.m_comp_size, mz_zip_reader_is_file_a_directory(&zip_archive, j));
+    printf("Filename: \"%s\", Comment: \"%s\", Uncompressed size: %u, Compressed size: %u, Is Dir: %u\n", file_stat.m_filename, file_stat.m_comment, static_cast<uint>(file_stat.m_uncomp_size), static_cast<uint>(file_stat.m_comp_size), mz_zip_reader_is_file_a_directory(&zip_archive, j));
 
     if (!strcmp(file_stat.m_filename, "directory/"))
     {
@@ -160,8 +160,8 @@ int main_function(int argc, char *argv[])
         return EXIT_FAILURE;
       }
 
-      printf("Successfully extracted file \"%s\", size %u\n", archive_filename, (uint)uncomp_size);
-      printf("File data: \"%s\"\n", (const char *)p);
+      printf("Successfully extracted file \"%s\", size %u\n", archive_filename, static_cast<uint>(uncomp_size));
+      printf("File data: \"%s\"\n", static_cast < const char *>(p));
 
       // We're done.
       mz_free(p);
@@ -173,4 +173,118 @@ int main_function(int argc, char *argv[])
 
   printf("Success.\n");
   return EXIT_SUCCESS;
+}
+
+#include<iostream>
+#include<boost/bind.hpp>
+#include<boost/thread/thread.hpp>
+using std::cout;
+using std::endl;
+using std::cin;
+// multiply matrice of SIZE by SIZE of type T
+template<typename T, int SIZE = 10>
+class Matrix
+{
+public:
+  Matrix(int num)
+  {
+    init(A);
+    init(B);
+    //init(C); // initialize matrix C in multiply() instead
+    num_thread = num;
+  }
+
+
+  void multiply(const int& slice)
+  {
+    // each thread works on its own separate slice only
+    // so there is no need for synchronization among threads
+    // note that this 'slicing' works fine
+    // even if SIZE is not divisible by num_thread
+    const int from = (slice * SIZE) / num_thread;
+    const int to = ((slice + 1) * SIZE) / num_thread;
+
+    for (int i = from; i < to; i++)
+    {
+      for (int j = 0; j < SIZE; j++)
+      {
+        C[i][j] = 0; // initialize matrix C
+        for (int k = 0; k < SIZE; k++)
+          C[i][j] += A[i][k] * B[k][j];
+      }
+    }
+  }
+
+  void output()
+  {
+    print(A);
+    cout << endl << "   * " << endl;
+    print(B);
+    cout << endl << "   = " << endl;
+    print(C);
+    cout << endl;
+  }
+private:
+  T A[SIZE][SIZE];  // matrix multiplication
+  T B[SIZE][SIZE];  // C = A * B
+  T C[SIZE][SIZE];
+  int num_thread;   // number of threads
+
+  void init(T M[SIZE][SIZE]) // initialize a matrix
+  {
+    int value = 0;
+    for (int i = 0; i < SIZE; i++)
+    {
+      for (int j = 0; j < SIZE; j++)
+        M[i][j] = value++;
+    }
+  }
+
+  void print(const T M[SIZE][SIZE]) const // print out result
+  {
+    for (int i = 0; i < SIZE; i++)
+    {
+      std::cout << endl << "     |";
+      for (int j = 0 ; j < SIZE; j++)
+      {
+        cout << M[i][j] << "  ";
+      }
+      cout << "|";
+    }
+  }
+};
+
+int main_multiplication() {
+  cout << "There are " << boost::thread::hardware_concurrency()
+       << " cores/processors on your computer." << endl;
+  cout << "How many threads do you want to use?" << endl;
+
+  int thrd_num;
+  cout << "You are going to use total - 2 cores";
+  thrd_num = boost::thread::hardware_concurrency() - 2;
+  if (thrd_num <= 0) {
+    thrd_num = 1;
+  };
+
+  // default matrix of 10 by 10 integers for multiplication
+  // concurrently computed by thrd_mum of working threads
+  Matrix<int> m(thrd_num);
+
+  boost::thread_group threads;
+  for (int i = 0; i < thrd_num; i++)
+  {
+    threads.create_thread(
+      boost::bind(
+        &Matrix<int>::multiply,
+        boost::ref(m),
+        i));
+  }
+
+  // main thread can do other things here concurrently. We just
+  // simply let it wait for working threads to complete
+
+  threads.join_all();
+
+  m.output();
+  return 0;
 }
