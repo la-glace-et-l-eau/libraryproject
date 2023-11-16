@@ -2,10 +2,17 @@
 
 include(FetchContent)
 
+SET(FETCHCONTENT_QUIET NO)
+SET(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+SET(ENABLE_TESTS OFF)
+
 FetchContent_Declare(
   miniz
-  GIT_REPOSITORY https://github.com/richgel999/miniz
-  GIT_TAG        master
+  GIT_REPOSITORY              https://github.com/richgel999/miniz
+  GIT_TAG                     origin/master
+  GIT_SHALLOW                 1
+  GIT_PROGRESS                1
+  GIT_REMOTE_UPDATE_STRATEGY  CHECKOUT
 )
 
 FetchContent_MakeAvailable(miniz)
@@ -42,8 +49,11 @@ include_directories(
 
 FetchContent_Declare(
   fmt
-  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG        master
+  GIT_REPOSITORY              https://github.com/fmtlib/fmt.git
+  GIT_TAG                     origin/master
+  GIT_SHALLOW                 1
+  GIT_PROGRESS                1
+  GIT_REMOTE_UPDATE_STRATEGY  CHECKOUT
 )
 
 FetchContent_MakeAvailable(fmt)
