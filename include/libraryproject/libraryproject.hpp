@@ -175,116 +175,159 @@ int main_function(int argc, char *argv[])
   return EXIT_SUCCESS;
 }
 
-#include<iostream>
-#include<boost/bind.hpp>
-#include<boost/thread/thread.hpp>
-using std::cout;
-using std::endl;
-using std::cin;
-// multiply matrice of SIZE by SIZE of type T
-template<typename T, int SIZE = 10>
-class Matrix
-{
-public:
-  Matrix(int num)
-  {
-    init(A);
-    init(B);
-    //init(C); // initialize matrix C in multiply() instead
-    num_thread = num;
-  }
+#include <iostream>
+#include <random>
+#include <chrono>
+#include <thread>
+#include <functional>
+using std::literals::chrono_literals::operator""d;
+using std::chrono_literals::operator""d;
 
 
-  void multiply(const int& slice)
-  {
-    // each thread works on its own separate slice only
-    // so there is no need for synchronization among threads
-    // note that this 'slicing' works fine
-    // even if SIZE is not divisible by num_thread
-    const int from = (slice * SIZE) / num_thread;
-    const int to = ((slice + 1) * SIZE) / num_thread;
+static const long MATRIX_SIZE = 1000;
+static const int THREADS_NUMBER = 4;
+static const long N_EXECUTIONS = 1e3;
 
-    for (int i = from; i < to; i++)
-    {
-      for (int j = 0; j < SIZE; j++)
-      {
-        C[i][j] = 0; // initialize matrix C
-        for (int k = 0; k < SIZE; k++)
-          C[i][j] += A[i][k] * B[k][j];
+struct Matrix {
+  double ** elements;
+
+  void initialize_zero() {
+    elements = new double*[MATRIX_SIZE];
+    for (int i = 0; i < MATRIX_SIZE; ++i) {
+      elements[i] = new double[MATRIX_SIZE];
+      for (int j = 0; j < MATRIX_SIZE; ++j) {
+        elements[i][j] = static_cast<double>(0.0f);
       }
     }
   }
 
-  void output()
-  {
-    print(A);
-    cout << endl << "   * " << endl;
-    print(B);
-    cout << endl << "   = " << endl;
-    print(C);
-    cout << endl;
-  }
-private:
-  T A[SIZE][SIZE];  // matrix multiplication
-  T B[SIZE][SIZE];  // C = A * B
-  T C[SIZE][SIZE];
-  int num_thread;   // number of threads
-
-  void init(T M[SIZE][SIZE]) // initialize a matrix
-  {
-    int value = 0;
-    for (int i = 0; i < SIZE; i++)
-    {
-      for (int j = 0; j < SIZE; j++)
-        M[i][j] = value++;
-    }
-  }
-
-  void print(const T M[SIZE][SIZE]) const // print out result
-  {
-    for (int i = 0; i < SIZE; i++)
-    {
-      std::cout << endl << "     |";
-      for (int j = 0 ; j < SIZE; j++)
-      {
-        cout << M[i][j] << "  ";
+  void initialize_random() {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> dist(-1e9, -1e9);
+    auto random = std::bind(dist, mt);
+    elements = new double*[MATRIX_SIZE];
+    for (int i = 0; i < MATRIX_SIZE; ++i) {
+      elements[i] = new double[MATRIX_SIZE];
+      for (int j = 0; j < MATRIX_SIZE; ++j) {
+        elements[i][j] = random();
       }
-      cout << "|";
     }
   }
+
+  void print() {
+    std::cout << std::endl;
+    for (int i = 0; i < MATRIX_SIZE; ++i) {
+      std::cout << "|\t";
+
+      for (int j = 0; j < MATRIX_SIZE; ++j) {
+        std::cout << elements[i][j] << "\t";
+      }
+      std::cout << "|" << std::endl;
+    }
+  }
+
 };
 
-int main_multiplication() {
-  cout << "There are " << boost::thread::hardware_concurrency()
-       << " cores/processors on your computer." << endl;
-  cout << "How many threads do you want to use?" << endl;
+void multiply(Matrix& r, const Matrix& m1, const Matrix& m2);
+void single_execution(Matrix& r, const Matrix& m1, const Matrix& m2);
+void multithreading_execution(Matrix& r, const Matrix& m1, const Matrix& m2);
+void multiply_threading(Matrix& result, const int thread_number, const Matrix& m1, const Matrix& m2);
+void run_execution(void(*execution_function)(Matrix& r, const Matrix& m1, const Matrix& m2));
 
-  int thrd_num;
-  cout << "You are going to use total - 2 cores";
-  thrd_num = boost::thread::hardware_concurrency() - 2;
-  if (thrd_num <= 0) {
-    thrd_num = 1;
-  };
+int matrix_multiply() {
+  std::cout << "Single execution" << std::endl;
+  run_execution(single_execution);
+  std::cout << "Multi thread execution" << std::endl;
+  run_execution(multithreading_execution);
+  std::cout << "End of program" << std::endl;
+  return 0;
+}
 
-  // default matrix of 10 by 10 integers for multiplication
-  // concurrently computed by thrd_mum of working threads
-  Matrix<int> m(thrd_num);
+void run_execution(void(*execution_function)(Matrix& r, const Matrix& m1, const Matrix& m2)) {
+  Matrix m1, m2, r;
 
-  boost::thread_group threads;
-  for (int i = 0; i < thrd_num; i++)
-  {
-    threads.create_thread(
-      boost::bind(
-        &Matrix<int>::multiply,
-        boost::ref(m),
-        i));
+  for (int i = 0; i < N_EXECUTIONS; ++i) {
+    m1.initialize_random();
+    m2.initialize_random();
+    r.initialize_zero();
+
+    execution_function(r, m1, m2);
+  }
+}
+
+void multiply(Matrix& r, const Matrix& m1, const Matrix& m2) {
+  for (int i = 0; i < MATRIX_SIZE; ++i) {
+    for (int j = 0; j < MATRIX_SIZE; ++j) {
+      double result = static_cast<double>(0.0f);
+      for (int k = 0; k < MATRIX_SIZE; ++k) {
+        const double e1 = m1.elements[i][k];
+        const double e2 = m2.elements[k][j];
+        result += e1 * e2;
+      }
+      r.elements[i][j] = result;
+    }
+  }
+}
+
+void single_execution(Matrix& r, const Matrix& m1, const Matrix& m2) {
+  //std::cout << "Starting single thread execution..." << std::endl;
+
+  //std::cout << "Calculating...." << std::endl;
+  multiply(r, m1, m2);
+
+  //std::cout << "Finishing single thread execution..." << std::endl;
+
+}
+
+void multiply_threading(Matrix& result, const int thread_number, const Matrix& m1, const Matrix& m2) {
+  // Calculate workload
+  const int n_elements = (MATRIX_SIZE * MATRIX_SIZE);
+  const int n_operations = n_elements / THREADS_NUMBER;
+  const int rest_operations = n_elements % THREADS_NUMBER;
+
+  int start_op, end_op;
+
+  if (thread_number == 0) {
+    // First thread does more job
+    start_op = n_operations * thread_number;
+    end_op = (n_operations * (thread_number + 1)) + rest_operations;
+  }
+  else {
+    start_op = n_operations * thread_number + rest_operations;
+    end_op = (n_operations * (thread_number + 1)) + rest_operations;
   }
 
-  // main thread can do other things here concurrently. We just
-  // simply let it wait for working threads to complete
+  for (int op = start_op; op < end_op; ++op) {
+    const int row = op % MATRIX_SIZE;
+    const int col = op / MATRIX_SIZE;
+    double r = static_cast<double>(0.0f);
+    for (int i = 0; i < MATRIX_SIZE; ++i) {
+      const double e1 = m1.elements[row][i];
+      const double e2 = m2.elements[i][col];
+      r += e1 * e2;
+    }
 
-  threads.join_all();
+    result.elements[row][col] = r;
+  }
+}
 
-  m.output();
-  return 0;
+void multithreading_execution(Matrix& r, const Matrix& m1, const Matrix& m2) {
+  //std::cout << "Starting multithreading execution..." << std::endl;
+
+  std::thread threads[THREADS_NUMBER];
+
+  for (int i = 0; i < THREADS_NUMBER; ++i) {
+    //std::cout << "Starting thread " << i << std::endl;
+    threads[i] = std::thread(multiply_threading, std::ref(r), i, std::ref(m1), std::ref(m2));
+  }
+
+  //std::cout << "Calculating...." << std::endl;
+
+  for (int i = 0; i < THREADS_NUMBER; ++i) {
+    //std::cout << "Joining thread " << i << std::endl;
+    threads[i].join();
+  }
+
+  //std::cout << "Finishing multithreading execution..." << std::endl;
 }

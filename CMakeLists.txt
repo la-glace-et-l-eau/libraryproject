@@ -34,10 +34,6 @@ target_compile_features(libraryproject_libraryproject INTERFACE cxx_std_20)
 
 target_link_libraries(libraryproject_libraryproject INTERFACE fmt::fmt)
 target_link_libraries(libraryproject_libraryproject INTERFACE miniz)
-target_link_libraries(libraryproject_libraryproject INTERFACE boost)
-
-
-
 
 # ---- Install rules ----
 
