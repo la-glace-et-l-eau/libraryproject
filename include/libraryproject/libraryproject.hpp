@@ -180,11 +180,8 @@ int main_function(int argc, char *argv[])
 #include <chrono>
 #include <thread>
 #include <functional>
-using std::literals::chrono_literals::operator""d;
-using std::chrono_literals::operator""d;
 
-
-static const long MATRIX_SIZE = 1000;
+static const long MATRIX_SIZE = 30;
 static const int THREADS_NUMBER = 4;
 static const long N_EXECUTIONS = 1e3;
 

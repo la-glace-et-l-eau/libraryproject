@@ -16,12 +16,10 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(miniz)
+target_compile_options(miniz INTERFACE -Wno-error )
 
-message("Fetched miniz source code from Github: ${miniz_SOURCE_DIR}")
-include_directories(
-  ${miniz_SOURCE_DIR}
-  ${miniz_BINARY_DIR}
-)
+
+    # initialize dangling oracles
 
     if(NOT CMAKE_BUILD_TYPE)
       set(CMAKE_BUILD_TYPE "Release")
@@ -44,6 +42,7 @@ include_directories(
             )
 
 
+
 FetchContent_Declare(
   fmt
   GIT_REPOSITORY              https://github.com/fmtlib/fmt.git
@@ -54,12 +53,14 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(fmt)
-
+target_compile_options(fmt INTERFACE -Wno-error)
 message("Fetched fmt source code from Github: ${fmt_SOURCE_DIR}")
 include_directories(
   ${fmt_SOURCE_DIR}
   ${fmt_BINARY_DIR}
 )
+
+
 
 # set(MINIZ_SOURCE_URL
 #         "https://github.com/richgel999/miniz")
